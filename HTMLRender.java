@@ -90,65 +90,14 @@ public class HTMLRender {
 			if (tokens[i] != null) {
 				/* Check for <html> and <body> we can ignore these since
 				 * code is assumed to be syntactically correct*/
-				if (isNotImportant(tokens[i])) i++;
-				isTag = checkModifiers(tokens[i]);
-				// Check for </p>, println if it is
-				// Check for <hr>, print horizontal rule if it is
-				// Check for <br>, print page break if it is
-				// Check for <q> or </q>, print quotes
-				switch (tokens[i]) {
-					case "</p>":	browser.println();	isTag = true;	
-					break;
-					case "<hr>":	borwser.printHorizontalRule(); 
-					isTag = true;	break;
-					case "<br>":	browser.printBreak(); isTag = true;	
-					break;
-					case "<q>":	case "</q>":	browser.print("\""); 
-					isTag = true;	break;
-				}
+				if (isNotImportant(tokens[i])) isTag = true;
+				// Account for bold, italics, and headers
+				if (checkModifiers(tokens[i])) isTag = true;
+				// Check for modifiers
+				printModifiers(tokens[i], isTag);
+				isTag = false;
 			}
 		}
-		
-		/*
-		// Sample renderings from HtmlPrinter class
-		
-		// Print plain text without line feed at end
-		browser.print("First line");
-		
-		// Print line feed
-		browser.println();
-		
-		// Print bold words and plain space without line feed at end
-		browser.printBold("bold words");
-		browser.print(" ");
-		
-		// Print italic words without line feed at end
-		browser.printItalic("italic words");
-		
-		// Print horizontal rule across window (includes line feed before and after)
-		browser.printHorizontalRule();
-		
-		// Print words, then line feed (printBreak)
-		browser.print("A couple of words");
-		browser.printBreak();
-		browser.printBreak();
-		
-		// Print a double quote
-		browser.print("\"");
-		
-		// Print Headings 1 through 6 (Largest to smallest)
-		browser.printHeading1("Heading1");
-		browser.printHeading2("Heading2");
-		browser.printHeading3("Heading3");
-		browser.printHeading4("Heading4");
-		browser.printHeading5("Heading5");
-		browser.printHeading6("Heading6");
-		
-		// Print pre-formatted text (optional)
-		browser.printPreformattedText("Preformat Monospace\tfont");
-		browser.printBreak();
-		browser.print("The end");
-		*/
 	}
 	/**
 	 * 	Read and tokenize file
@@ -182,18 +131,11 @@ public class HTMLRender {
 	 * 	@return	boolean true if those tags present false otherwise
 	 */
 	public boolean isNotImportant (String token) {
-		switch (token) {
+		switch (token.toLowerCase()) {
 			case "<html>":	case "</html>":	case "<body>":	case "</body>":
-			return true;
+			case "<p>":	return true;
 			default:	return false;
 		}
-		/*if (token.length() < 5) return false;
-		if (token.charAt(0) != '<' || token.charAt(token.length() - 1) != '>')
-			return false;
-		if (token.indexOf("html") != -1) return true;
-		if (token.indexOf("body") != -1) return true;
-		return false;
-		*/
 	}
 	
 	/**
@@ -203,21 +145,59 @@ public class HTMLRender {
 	 * 	@return boolean	was it a bold, italics, or header
 	 */
 	public boolean checkModifiers (String token) {
-		switch (token) {
-			case "<b>":		isB = true;		return true;
-			case "</b>":	isB = false;	return true;
-			case "<i>":		isI = true;		return true;
-			case "</i>":	isI = false;	return true;
-			case "<h1>":	isH = true;		headerSize = 1;		return true;
-			case "<h2>":	isH = true;		headerSize = 2;		return true;
-			case "<h3>":	isH = true;		headerSize = 3;		return true;
-			case "<h4>":	isH = true;		headerSize = 4;		return true;
-			case "<h5>":	isH = true;		headerSize = 5;		return true;
-			case "<h6>":	isH = true;		headerSize = 6;		return true;
+		switch (token.toLowerCase()) {
+			// Check for bolds and headers
+			case "<b>":		mod = modifiers.BOLD;		return true;
+			case "</b>":	mod = modifiers.NONE;		return true;
+			case "<i>":		mod = modifiers.ITALICS;	return true;
+			case "</i>":	mod = modifiers.NONE;		return true;
+			case "<h1>":	mod = modifiers.H1;			return true;
+			case "<h2>":	mod = modifiers.H2;			return true;
+			case "<h3>":	mod = modifiers.H3;			return true;
+			case "<h4>":	mod = modifiers.H4;			return true;
+			case "<h5>":	mod = modifiers.H5;		return true;
+			case "<h6>":	mod = modifiers.H6;		return true;
 			case "</h1>":	case "</h2>":	case "</h3>":	case "</h4>":
-			case "</h5>":	case "</h6>":	isH = false; headerSize = -1;
+			case "</h5>":	case "</h6>":	mod = modifiers.NONE;
 			return true;
 		};
 		return false;
+	}
+	
+	/**
+	 * Print the given token with tht given modification
+	 * 
+	 * @param String	token to print
+	 * @param boolean	is the token a tag
+	 */
+	public void printModifiers (String token, boolean isTag) {
+		// Check for </p>, println if it is
+		// Check for <hr>, print horizontal rule if it is
+		// Check for <br>, print page break if it is
+		// Check for <q> or </q>, print quotes
+		switch (token.toLowerCase()) {
+			case "</p>":	browser.println();	isTag = true;	
+			break;
+			case "<hr>":	browser.printHorizontalRule(); 
+			isTag = true;	break;
+			case "<br>":	browser.printBreak(); isTag = true;	
+			break;
+			case "<q>":	case "</q>":	browser.print("\""); 
+			isTag = true;	break;
+		}
+		// Print token
+		if (!isTag) {
+			switch (mod) {
+				case NONE: browser.print(token);			break;
+				case BOLD: browser.printBold(token);		break;
+				case ITALICS: browser.printItalic(token);	break;
+				case H1: browser.printHeading1(token);		break;
+				case H2: browser.printHeading2(token);		break;
+				case H3: browser.printHeading3(token);		break;
+				case H4: browser.printHeading4(token);		break;
+				case H5: browser.printHeading5(token);		break;
+				case H6: browser.printHeading6(token);		break;
+			}
+		}
 	}
 }

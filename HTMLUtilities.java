@@ -46,7 +46,9 @@ public class HTMLUtilities {
 				state = tokenizerState.NONE;
 			}
 			if (state == tokenizerState.PRE) {
-				result[0] = str;
+				result[tokenNum] = str;
+				tokenNum ++;
+				counter += 5;
 				return result;
 			}
 		
