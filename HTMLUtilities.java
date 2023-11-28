@@ -125,7 +125,7 @@ public class HTMLUtilities {
 	 * @return			boolean true for if token starts and ends with
 	 * 					< and > respectively, false if not
 	 */
-	private boolean checkTag (String token) {
+	public boolean checkTag (String token) {
 		// Check first and last char
 		if (token.charAt(0) == '<' && token.charAt(token.length() - 1) == '>') {
 			return true;
@@ -139,7 +139,7 @@ public class HTMLUtilities {
 	 * @param 	c	character to check
 	 * @return		boolean true if punctuation
 	 */
-	private boolean isPunctuation (char c) {
+	public boolean isPunctuation (char c) {
 		switch (c) {
 			case ',': case ';': case ':': case '(': case ')':
 			case '?': case '!': case '=': case '&': case '~': case '+':
@@ -156,7 +156,7 @@ public class HTMLUtilities {
 	 * @param temptoken		string from the last token to where counter
 	 * @return				boolean true if there tempToken is a token
 	 */
-	private boolean isFullToken (String str, int counter, String tempToken) {
+	public boolean isFullToken (String str, int counter, String tempToken) {
 		/* keep as boolean as some cases may overlap, so a false might turn 
 		 * into a true after considring other cases */
 		boolean isComplete = false;
