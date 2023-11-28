@@ -89,6 +89,10 @@ public class HTMLRender {
 				input = reader.nextLine();
 				// Tokenize line
 				String[] tokens = HTMLutils.tokenizeHTMLString(input);
+				
+				// Keep track of header until time to print
+				String tempHeader = "";
+				
 				// Print stuff from tokens
 				for (int i = 0; i < tokens.length; i++) {
 					if (tokens[i] != null) {
@@ -99,8 +103,18 @@ public class HTMLRender {
 						if (checkModifiers(tokens[i]))	isTag = true;
 						// Check if the next token is a singular punctuation
 						if (HTMLCheckPunct(tokens, i))	isPunct = true;
-						// Print the token if it is not a tag
-						HTMLPrintTokens(tokens[i], isTag, isPunct);
+						// Check to see if a header has ended
+						boolean printHeader = headerEnd(tokens[i]);
+						// Check if the current state is a header
+						if (printHeader) {
+							HTMLPrintHeader(tempHeader);
+						}
+						else if (isHeader()) {
+							tempHeader += tokens[i];
+						} else {
+							// Print the token if it is not a tag
+							HTMLPrintTokens(tokens[i], isTag, isPunct);
+						}
 						isTag = false;
 						isPunct = false;
 					}
@@ -233,10 +247,26 @@ public class HTMLRender {
 			}
 		}
 		// Add a space if token printed is not punctuation or preformatted
-		if (!isPunct && mod != modifiers.PRE && !isTag) {
+		if (!isPunct && mod != modifiers.PRE && !isTag && !isHeader()) {
 			browser.print(" ");
 			charCount += tokenLength(1);
 		}
+	}
+	
+	/**
+	 * Print Headers specifically
+	 * 
+	 * @param String	header to print
+	 * @param Boolan	set mod to true?
+	 */
+	private void HTMLPrintHeader (String line) {
+		switch (mod) {
+			case H1:	
+			case H2:	
+			case H3:	
+			case H4:	
+			case H5:	
+			case H6:
 	}
 	
 	/**
@@ -262,5 +292,32 @@ public class HTMLRender {
 			case H6: return 20 * tokenChars;
 			// PRE doesn't care
 		}
+	}
+	
+	/**
+	 * Check if current mod is header
+	 * 
+	 * @return boolean	is mod header
+	 */
+	private boolean isHeader () {
+		 switch (mod) {
+			 case H1:	case H2:	case H3:	case H4:	case H5:	
+			 case H6: return true;
+			 default: return false;
+		 }
+	 }
+	
+	/**
+	 * Check if the token is a </H#>
+	 * 
+	 * @param	String	token to check
+	 * @return 	boolean	is the header ending
+	 */
+	private boolean headerEnd (String token) {
+		switch (token.toUpperCase()) {
+			case "</H1>":	case "</H2>":	case "</H3>":	case "</H4>":
+			case "</H5>":	case "</H6>":	return true;
+		}
+		return false;
 	}
 }
